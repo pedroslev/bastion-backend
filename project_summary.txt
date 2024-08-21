@@ -1,0 +1,42 @@
+Processing ./app/routes.py...
+----------------------------------------
+File: ./app/routes.py
+----------------------------------------
+from fastapi import APIRouter, Body from pydantic import BaseModel import sys from crud import get_image_filenames, save_text, get_word_cloud_image from app.wordcloudMod import generate_wordcloud from ia import generate_ia_image import logging from config import IMAGE_WORDCLOUD_DIR, STATE_DIR router = APIRouter() logging.basicConfig(level=logging.INFO) logger = logging.getLogger(__name__) class textModel(BaseModel): text: str @router.post("/generate") def generate_image(request: textModel = Body(...)): logger.info(f"New request for image generation: {request.text}") image_url = generate_ia_image(request.text) return image_url @router.get("/images") async def list_images(): images = get_image_filenames() return images @router.get("/wordcloud") async def get_wordcloud(): try: image = get_word_cloud_image() return image except FileNotFoundError: return {"status": "File not found", "code": 404} except Exception as e: return {"status": f"Error getting wordcloud image: {str(e)}", "code": 500} @router.post("/push-text") async def push_text(request: textModel = Body(...)): save_text(request.text) return {"status": "Text saved successfully", "code": 200} @router.get("/generate-wordcloud") async def wordcloud(): image_url = generate_wordcloud() return {"wordcloud_image_url": image_url} @router.get("/restart-wordcloud") async def restart_wordcloud(): try: with open(f"{IMAGE_WORDCLOUD_DIR}/palabras.txt", "w") as file: file.write("") return {"status": "Wordcloud restarted successfully", "code": 200} except FileNotFoundError: return {"status": "File not found", "code": 404} except Exception as e: return {"status": f"Error restarting wordcloud: {str(e)}", "code": 500} @router.get("/load") async def load(): try: text_file = open(STATE_DIR, "r") texts = text_file.readlines() text_list = [text.strip() for text in texts] text_file.close() return text_list[0] except FileNotFoundError: return {"status": "File not found", "code": 404} except Exception as e: return {"status": f"Error getting state: {str(e)}", "code": 500} @router.post("/state") async def save_state(request: textModel = Body(...)): try: with open(STATE_DIR, "w") as file: file.write(request.text) return {"status": "State saved successfully", "code": 200} except Exception as e: return {"status": f"Error saving state: {str(e)}", "code": 500}
+
+
+Processing ./app/main.py...
+----------------------------------------
+File: ./app/main.py
+----------------------------------------
+import sys import os from pathlib import Path import logging from dotenv import load_dotenv sys.path.append(str(Path(__file__).parent.parent)) sys.path.append(str(Path(__file__).parent)) from fastapi import FastAPI from fastapi.middleware.cors import CORSMiddleware from routes import router load_dotenv() logging.basicConfig(level=logging.INFO) logger = logging.getLogger(__name__) server_port = int(os.getenv("PORT", 8000)) app = FastAPI( title="bastion-service", version="1.0", description="Interface for Bastion McCain's AI services", ) app.add_middleware( CORSMiddleware, allow_origins=["*"], # Adjust the origins as needed allow_credentials=True, allow_methods=["*"], allow_headers=["*"], ) app.include_router(router, prefix="/api/v1") @app.get("/status") async def root(): return {"message": f"bastion-service is running on version {app.version}"} if __name__ == "__main__": import uvicorn uvicorn.run(app, host="0.0.0.0", port=server_port)
+
+
+Processing ./app/config.py...
+----------------------------------------
+File: ./app/config.py
+----------------------------------------
+import os from dotenv import load_dotenv load_dotenv() OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") IMAGE_IA_DIR = os.getenv("IMAGE_IA_DIR", "./app/files/ia/") IMAGE_WORDCLOUD_DIR = os.getenv("IMAGE_WORDCLOUD_DIR", "./app/files/wordcloud/") STATE_DIR = os.getenv("STATE_DIR", "./app/files/state.txt") 
+
+
+Processing ./app/ia.py...
+----------------------------------------
+File: ./app/ia.py
+----------------------------------------
+from fastapi import HTTPException from langchain.chains import LLMChain from langchain_community.utilities.dalle_image_generator import DallEAPIWrapper from langchain_core.prompts import PromptTemplate from langchain_openai import OpenAI from pydantic import BaseModel import aiohttp from typing import List import requests import os from openai import OpenAI import logging from crud import save_image_locally, get_image_filenames logging.basicConfig(level=logging.INFO) logger = logging.getLogger(__name__) client = OpenAI() def generate_ia_image(text: str): response = client.images.generate( model="dall-e-3", prompt=f"pregunta: ¿Cual es tu compromiso de cara al 2030? Esto es para un evento de la empresa McCain. Utiliza esto como contexto. SOLO debes contestar con la imagen puramente visual y obligatoriamente SIN TEXTOS. No puedes generar bebidas alcoholicas. McCain comercializa productos de comida congelada y papas fritas en distintas formas Solo tienes permitido usar la palabra 'McCain'. respuesta: {text}", size="1024x1024", quality="standard", n=1, ) image_url =response.data[0].url image_name = image_url.split("/")[6].split("?")[0] logger.info(f"Image name: {image_name}") save_image_locally(image_url, image_name) return {"image_url": image_url} 
+
+
+Processing ./app/crud.py...
+----------------------------------------
+File: ./app/crud.py
+----------------------------------------
+import os import requests from config import IMAGE_IA_DIR, IMAGE_WORDCLOUD_DIR from dotenv import load_dotenv import logging load_dotenv() logging.basicConfig(level=logging.INFO) logger = logging.getLogger(__name__) def save_text(text: str): try: logger.info(f"Saving text: {text}") text_file = open(f"{IMAGE_WORDCLOUD_DIR}/palabras.txt", "a") text_file.write(text + "\n") text_file.close() return True except: return False def get_all_texts(): try: text_file = open(f"{IMAGE_WORDCLOUD_DIR}/palabras.txt", "r") texts = text_file.readlines() text_list = [text.strip() for text in texts] text_file.close() return text_list except: return False def save_image_locally(image_url: str, image_name: str): try: response = requests.get(image_url) image_content = response.content save_dir = IMAGE_IA_DIR + image_name with open(save_dir, "wb") as file: file.write(image_content) logger.info(f"Image saved locally at: {save_dir}") return save_dir except: return False def get_image_filenames(): image_dir = os.path.dirname(IMAGE_IA_DIR) image_filenames = os.listdir(image_dir) image_filenames = [f"http://localhost/files/ia/{image}" for image in image_filenames] return image_filenames def get_word_cloud_image(): image_dir = os.path.dirname(IMAGE_WORDCLOUD_DIR) image_filenames = os.listdir(image_dir) image_filenames = [f"http://localhost/files/mentimeter/{image}" for image in image_filenames] image_filenames = [image for image in image_filenames if "wordcloud.png" in image] return image_filenames[0]
+
+
+Processing ./app/wordcloudMod.py...
+----------------------------------------
+File: ./app/wordcloudMod.py
+----------------------------------------
+from wordcloud import WordCloud import os from crud import get_all_texts import logging from config import IMAGE_WORDCLOUD_DIR logging.basicConfig(level=logging.INFO) logger = logging.getLogger(__name__) def generate_wordcloud(): try: texts = get_all_texts() combined_text = " ".join(texts) wordcloud = WordCloud(width=800, height=400).generate(combined_text) image_path = f"{IMAGE_WORDCLOUD_DIR}/wordcloud.png" wordcloud.to_file(image_path) return image_path except Exception as e: logger.error(f"Error generating wordcloud: {str(e)}") return False 
+
+
