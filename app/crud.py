@@ -1,6 +1,6 @@
 import os
 import requests
-from config import IMAGE_IA_DIR, IMAGE_WORDCLOUD_DIR
+from config import IMAGE_IA_DIR, IMAGE_WORDCLOUD_DIR, SERVE_IMAGE
 from dotenv import load_dotenv
 import logging
 
@@ -52,7 +52,7 @@ def get_image_filenames():
         image_dir = os.path.dirname(IMAGE_IA_DIR)
         image_filenames = os.listdir(image_dir)
         #add to each image the url to access it
-        image_filenames = [f"http://localhost/files/ia/{image}" for image in image_filenames]
+        image_filenames = [f"{SERVE_IMAGE}/files/ia/{image}" for image in image_filenames]
         return image_filenames
     except Exception as e:
         logger.error(f"Error getting image filenames: {str(e)}")
@@ -64,7 +64,7 @@ def get_word_cloud_image():
         image_dir = os.path.dirname(IMAGE_WORDCLOUD_DIR)
         image_filenames = os.listdir(image_dir)
         #add to each image the url to access it
-        image_filenames = [f"http://localhost/files/mentimeter/{image}" for image in image_filenames]
+        image_filenames = [f"{SERVE_IMAGE}/files/wordcloud/{image}" for image in image_filenames]
         #only return the one with the name wordcloud.png
         image_filenames = [image for image in image_filenames if "wordcloud.png" in image]
         return image_filenames[0]

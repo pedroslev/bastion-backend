@@ -13,3 +13,5 @@ IMAGE_IA_DIR = os.getenv("IMAGE_IA_DIR", "/app/files/ia/")
 IMAGE_WORDCLOUD_DIR = os.getenv("IMAGE_WORDCLOUD_DIR", "/app/files/wordcloud/")
 
 STATE_DIR = os.getenv("STATE_DIR", "/app/files/state.txt")
+
+SERVE_IMAGE = os.getenv("SERVE_IMAGE", "http://localhost:8000")

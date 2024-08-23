@@ -6,7 +6,7 @@ from crud import get_image_filenames, save_text, get_word_cloud_image
 from app.wordcloudMod import generate_wordcloud
 from ia import generate_ia_image
 import logging
-from config import IMAGE_WORDCLOUD_DIR, STATE_DIR
+from config import IMAGE_WORDCLOUD_DIR, STATE_DIR, SERVE_IMAGE
 
 router = APIRouter()
 
@@ -50,8 +50,14 @@ async def push_text(request: textModel = Body(...)):
 #Generate wordcloud image
 @router.get("/generate-wordcloud")
 async def wordcloud():
-    image_url = generate_wordcloud()
-    return {"wordcloud_image_url": image_url}
+    try:
+        generation = generate_wordcloud()
+        if generation:
+            image_url = f"{SERVE_IMAGE}/files/wordcloud/wordcloud.png"
+        return {"wordcloud_image_url": image_url}
+    except:
+        logger.error("Error generating wordcloud")
+        return {"status": "Error generating wordcloud", "code": 500}
 
 #Restart wordcloud texts
 @router.get("/restart-wordcloud")

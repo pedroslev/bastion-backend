@@ -5,13 +5,8 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Copy only the relevant directories
-COPY app/main.py /app/
-COPY requirements.txt /app/
-COPY app/config.py /app/
-COPY app/crud.py /app/
-COPY app/ia.py /app/
-COPY app/routes.py /app/
-COPY app/wordcloudMod.py /app/
+COPY app/ .
+COPY requirements.txt .
 
 # Install any needed packages specified in requirements.txt
 #RUN pip install --no-cache-dir -r requirements.txt
