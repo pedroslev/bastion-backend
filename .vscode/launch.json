@@ -8,7 +8,10 @@
             "name": "backend-service bastion",
             "type": "debugpy",
             "request": "launch",
-            "program": "./app/main.py",
+            "program": "${workspaceFolder}/venv/bin/python",
+            "args": [
+                "${workspaceFolder}/app/main.py"
+            ],
             "console": "integratedTerminal"
         }
     ]
