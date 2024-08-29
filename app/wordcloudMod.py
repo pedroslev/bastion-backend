@@ -16,12 +16,8 @@ def generate_wordcloud():
         
         # McCain brand colors
         brand_colors = [
-            '#fee000',  # Amarillo McCain
             '#000000',  # Negro
             '#434043',  # Gris Oscuro
-            '#003B75',  # Azul Oscuro
-            '#EA7603',  # Naranja
-            '#EC3400'   # Rojo
         ]
         
         def random_color_func(word=None, font_size=None, position=None, orientation=None, font_path=None, random_state=None):
