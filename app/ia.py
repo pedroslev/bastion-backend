@@ -22,7 +22,14 @@ def generate_ia_image(text: str):
     try:
         response = client.images.generate(
             model="dall-e-3",
-            prompt=f"pregunta: ¿Cual es tu compromiso de cara al 2030? Esto es para un evento de la empresa McCain. Utiliza esto como contexto. SOLO debes contestar con la imagen puramente visual y obligatoriamente SIN TEXTOS. No puedes generar bebidas alcoholicas. McCain comercializa productos de comida congelada y papas fritas en distintas formas Solo tienes permitido usar la palabra 'McCain'. respuesta: {text}",
+            prompt = f"""
+Crea una imagen corporativa que represente visualmente el compromiso personal expresado en la palabra (no más de 2) '{text}', incorporando los colores principales de McCain Foods (amarillo, naranja, negro y blanco) y destacando los elementos clave de los pilares estratégicos de McCain Foods para 2030: Liderazgo indiscutible en Papa, Mas del Menú y de Bueno a Excepcional.
+Instrucciones adicionales para el modelo AI:
+Personalización: Cada imagen debe ser única y reflejar la esencia del compromiso individual, conectando visualmente con los pilares de la estrategia al 2030.
+Colores Corporativos: El uso predominante de los colores de McCain Foods debe ser respetado, asegurando la coherencia visual con la identidad de la marca.
+Estilo Corporativo: Las imágenes deben mantener un estilo profesional y alineado con la identidad visual de McCain Foods, con un enfoque en la claridad y el impacto visual.
+Prohibido Usar: bebidas alcohólicas, imágenes infantiles o con niños, imágenes que sean ofensivas.
+""",
             size="1024x1024",
             quality="standard",
             n=1,

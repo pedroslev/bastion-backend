@@ -2,7 +2,7 @@
 
 # Define variables
 IMAGE_NAME="pedroslev/bastion-backend"
-VERSION="v1.0.0"
+VERSION="v2.0.0"
 
 # Build the Docker image
 docker build --platform linux/amd64 -t ${IMAGE_NAME}:${VERSION} . | tee build.log || exit 1
