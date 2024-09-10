@@ -4,4 +4,4 @@ IMAGE_WORDCLOUD_DIR =./app/files/wordcloud/
 STATE_DIR=./app/files/state.txt
 EXCEL_DIR=./app/files/momentos/
 MOSAIC_DIR=./app/files/mosaic/
-SERVE_IMAGE=http://localhost
+SERVE_IMAGE=https://hazear.xyz
