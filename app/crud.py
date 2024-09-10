@@ -1,11 +1,12 @@
 import os
 import random
 import requests
-from config import IMAGE_IA_DIR, IMAGE_WORDCLOUD_DIR, SERVE_IMAGE, EXCEL_DIR
+from config import IMAGE_IA_DIR, IMAGE_WORDCLOUD_DIR, SERVE_IMAGE, EXCEL_DIR, MOSAIC_DIR
 from dotenv import load_dotenv
 import logging
 from openpyxl import Workbook, load_workbook
 from datetime import datetime
+import math
 from PIL import Image
 
 load_dotenv()
@@ -106,6 +107,7 @@ def insert_text_to_excel_momento(filename, data):
     respuesta1 = data.pregunta1
     respuesta2 = data.pregunta2
     respuesta3 = data.pregunta3
+    logger.info(f"Inserting momento data to Excel: {respuesta1}, {respuesta2}, {respuesta3}")
 
     # Check if file exists
     if os.path.exists(file_path):
@@ -146,9 +148,9 @@ def get_momento():
         respuesta3_list.append(row[4])  # Column 5: Respuesta3
 
     # Select 3 random answers from each list
-    respuesta1 = random.sample(respuesta1_list, min(4, len(respuesta1_list)))
-    respuesta2 = random.sample(respuesta2_list, min(4, len(respuesta2_list)))
-    respuesta3 = random.sample(respuesta3_list, min(4, len(respuesta3_list)))
+    respuesta1 = random.sample(respuesta1_list, min(3, len(respuesta1_list)))
+    respuesta2 = random.sample(respuesta2_list, min(3, len(respuesta2_list)))
+    respuesta3 = random.sample(respuesta3_list, min(3, len(respuesta3_list)))
 
     # Return the selected answers in the required format
     return {
@@ -157,36 +159,46 @@ def get_momento():
         "respuesta3": respuesta3
     }
 
-def create_ia_mosaic(collage_width=1000, collage_height=1000, image_size=(100, 100), output_file="mosaic.png"):
+def create_ia_mosaic(mosaic_width=1000, mosaic_height=1000, image_size=(100, 100), output_file="mosaic.png"):
     # Get all .png files from the directory
     images = [os.path.join(IMAGE_IA_DIR, f) for f in os.listdir(IMAGE_IA_DIR) if f.endswith(".png")]
+    logger.info(f"Found {len(images)} images in the directory: {IMAGE_IA_DIR}")
     
     if not images:
         raise ValueError(f"No PNG files found in the directory: {IMAGE_IA_DIR}")
     
-    # Create a blank canvas for the collage
-    collage = Image.new('RGB', (collage_width, collage_height), color='white')
-
-    # Calculate number of rows and columns
-    num_columns = collage_width // image_size[0]
-    num_rows = collage_height // image_size[1]
+    # Determine number of images
+    num_images = len(images)
     
-    # Check if we have enough images to fill the grid
-    max_images = num_columns * num_rows
-
-    if len(images) < max_images:
-        print(f"Warning: Only {len(images)} images found. Some cells in the collage will be left empty.")
+    # Calculate the aspect ratio of the mosaic canvas
+    aspect_ratio = mosaic_width / mosaic_height
+    
+    # Estimate number of columns based on the aspect ratio and the number of images
+    num_columns = math.ceil(math.sqrt(num_images * aspect_ratio))
+    num_rows = math.ceil(num_images / num_columns)
+    
+    # Calculate the size of each image so they fit perfectly into the mosaic
+    image_width = mosaic_width // num_columns
+    image_height = mosaic_height // num_rows
+    
+    logger.info(f"Creating a mosaic with {num_rows} rows and {num_columns} columns.")
+    logger.info(f"Each image will be resized to {image_width}x{image_height} pixels.")
+    
+    # Create a blank canvas for the collage
+    collage = Image.new('RGB', (mosaic_width, mosaic_height), color='white')
 
     # Resize and paste each image into the collage grid
-    for index, image_path in enumerate(images[:max_images]):
+    for index, image_path in enumerate(images):
         row = index // num_columns
         col = index % num_columns
-
+        
         with Image.open(image_path) as img:
-            img = img.resize(image_size)
-            collage.paste(img, (col * image_size[0], row * image_size[1]))
-
+            img = img.resize((image_width, image_height), Image.Resampling.LANCZOS)
+            collage.paste(img, (col * image_width, row * image_height))
+    
     # Save the final collage to a file
-    output_file = os.path.join(IMAGE_IA_DIR, output_file)
+    output_file = os.path.join(MOSAIC_DIR, output_file)
     collage.save(output_file)
+    logger.info(f"Mosaic saved to {output_file}")
+    
     return True

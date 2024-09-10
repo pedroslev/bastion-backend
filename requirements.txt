@@ -13,6 +13,7 @@ cycler==0.12.1
 dataclasses-json==0.6.7
 distro==1.9.0
 dnspython==2.6.1
+et-xmlfile==1.1.0
 fastapi==0.112.1
 Flask==3.0.3
 fonttools==4.53.1
@@ -45,6 +46,7 @@ networkx==3.3
 numpy==1.26.4
 openai==1.41.0
 opencv-python==4.10.0.84
+openpyxl==3.1.5
 orjson==3.10.7
 packaging==24.1
 pillow==10.4.0

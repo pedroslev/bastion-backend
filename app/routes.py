@@ -49,7 +49,7 @@ async def mosaic():
     try:
         creation = create_ia_mosaic()
         if creation:
-            image_url = f"{SERVE_IMAGE}/files/ia/mosaic.png"
+            image_url = f"{SERVE_IMAGE}/files/mosaic/mosaic.png"
             return {"image_url": image_url, "status": "Mosaic created successfully", "code": 200}
         else:
             return {"status": "Error creating mosaic", "code": 500}

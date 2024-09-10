@@ -12,7 +12,7 @@ services:
       - ./files:/usr/share/nginx/html
 
   bastion-backend:
-    image: bastion-backend
+    image: pedroslev/bastion-backend:v3.0.0
     env_file:
       - .env
     container_name: bastion-backend

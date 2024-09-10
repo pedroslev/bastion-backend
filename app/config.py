@@ -14,6 +14,8 @@ IMAGE_WORDCLOUD_DIR = os.getenv("IMAGE_WORDCLOUD_DIR", "/app/files/wordcloud/")
 
 STATE_DIR = os.getenv("STATE_DIR", "/app/files/state.txt")
 
-SERVE_IMAGE = os.getenv("SERVE_IMAGE", "http://localhost:8000")
+SERVE_IMAGE = os.getenv("SERVE_IMAGE", "https://hazear.com")
 
 EXCEL_DIR = os.getenv("EXCEL_DIR", "/app/files/excel/")
+
+MOSAIC_DIR = os.getenv("MOSAIC_DIR", "/app/files/mosaic/")

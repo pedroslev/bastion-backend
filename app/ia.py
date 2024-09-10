@@ -10,6 +10,7 @@ import requests
 import os
 from openai import OpenAI
 import logging
+from config import SERVE_IMAGE
 from crud import save_image_locally, get_image_filenames
 
 # Configure logging
@@ -37,8 +38,9 @@ Prohibido Usar: bebidas alcohólicas, imágenes infantiles o con niños, imágen
         image_url =response.data[0].url
         image_name = image_url.split("/")[6].split("?")[0]
         logger.info(f"Image name: {image_name}")
-        save_image_locally(image_url, image_name)
-        return {"image_url": image_url}
+        save_dir = save_image_locally(image_url, image_name)
+        image_serve_url = save_dir.replace("/app", SERVE_IMAGE)
+        return {"image_url": image_serve_url}
     except Exception as e:
         logger.error(f"Error generating IA image: {str(e)}")
         return False
