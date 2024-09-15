@@ -22,3 +22,11 @@ services:
     volumes:
       - ./files/:/app/files
 
+  filebrowser:
+    image: hurlenko/filebrowser
+    container_name: filebrowser
+    volumes:
+      - ./files/:/data
+      - filebrowser_data:/config
+    ports:
+      - "1212:8080"

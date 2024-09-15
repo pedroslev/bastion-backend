@@ -1,7 +1,7 @@
-OPENAI_API_KEY=YOUR_API_KEY
-IMAGE_IA_DIR =./app/files/ia/
-IMAGE_WORDCLOUD_DIR =./app/files/wordcloud/
+OPENAI_API_KEY=YOUR_API_KEY=YOUR_API_KEY
+IMAGE_IA_DIR=./app/files/ia/
+IMAGE_WORDCLOUD_DIR=./app/files/wordcloud/
 STATE_DIR=./app/files/state.txt
-EXCEL_DIR=./app/files/momentos/
+EXCEL_DIR=./app/files/excels/
 MOSAIC_DIR=./app/files/mosaic/
 SERVE_IMAGE=https://hazear.xyz

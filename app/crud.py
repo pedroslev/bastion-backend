@@ -99,6 +99,73 @@ def insert_text_to_excel(filename, text):
     # Save the workbook
     workbook.save(file_path)
 
+def insert_momento4_to_excel(filename, data):
+    # Get current date and timestamp
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    current_time = datetime.now().strftime("%H:%M:%S")
+    file_path = os.path.join(EXCEL_DIR, filename)
+    # Check if file exists
+    if os.path.exists(file_path):
+        # Load existing workbook
+        workbook = load_workbook(file_path)
+        sheet = workbook.active
+    else:
+        # Create a new workbook and add headers
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.append(["Fecha", "Horario", "Summit content", "Day 1 presentations","Speaker day 1", "Speaker day 2", "Location", "Food", "Duration", "Summit Overall", "Liked the most", "Liked the least"])  # Add header if new file
+
+    # Append new row with date, timestamp, and text
+    sheet.append([current_date, current_time, data.content,data.presentation1,data.speaker1,data.speaker2,data.location,data.food,data.duration,data.summit, data.question1, data.question2])
+
+    # Save the workbook
+    workbook.save(file_path)
+
+def insert_training_to_excel(filename, data):
+    # Get current date and timestamp
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    current_time = datetime.now().strftime("%H:%M:%S")
+    file_path = os.path.join(EXCEL_DIR, filename)
+    # Check if file exists
+    if os.path.exists(file_path):
+        # Load existing workbook
+        workbook = load_workbook(file_path)
+        sheet = workbook.active
+    else:
+        # Create a new workbook and add headers
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.append(["Fecha", "Horario", "Awards Event", "Wednesday training","Thursday Training", "Likes", "Dislikes"])  # Add header if new file
+
+    # Append new row with date, timestamp, and text
+    sheet.append([current_date, current_time, data.AwardsEvent, data.TrainingWednesday, data.TrainingThursday, data.question1, data.question2])
+
+    # Save the workbook
+    workbook.save(file_path)
+
+def insert_ia_to_excel(filename, text, name, image):
+    # Get current date and timestamp
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    current_time = datetime.now().strftime("%H:%M:%S")
+    file_path = os.path.join(EXCEL_DIR, filename)
+    # Check if file exists
+    if os.path.exists(file_path):
+        # Load existing workbook
+        workbook = load_workbook(file_path)
+        sheet = workbook.active
+    else:
+        # Create a new workbook and add headers
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.append(["Fecha", "Horario", "Nombre", "Respuesta", "Imagen"])
+
+    # Append new row with date, timestamp, and text
+    sheet.append([current_date, current_time,name, text, image])
+
+    # Save the workbook
+    workbook.save(file_path)
+
+
 def insert_text_to_excel_momento(filename, data):
     # Get current date and timestamp
     current_date = datetime.now().strftime("%Y-%m-%d")
@@ -128,7 +195,7 @@ def insert_text_to_excel_momento(filename, data):
 
 
 def get_momento():
-    file_path = os.path.join(EXCEL_DIR, "momento1.xlsx")
+    file_path = os.path.join(EXCEL_DIR, "latamTopInitiatives.xlsx")
 
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"File {file_path} does not exist.")
@@ -157,6 +224,31 @@ def get_momento():
         "respuesta1": respuesta1,
         "respuesta2": respuesta2,
         "respuesta3": respuesta3
+    }
+
+def get_momento2():
+    file_path = os.path.join(EXCEL_DIR, "biggestTakeaway.xlsx")
+
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"File {file_path} does not exist.")
+
+    # Load the Excel workbook and select the active sheet
+    workbook = load_workbook(file_path)
+    sheet = workbook.active
+
+    # Read the data into lists for each column (excluding the header row)
+    respuesta_list = []
+
+    for row in sheet.iter_rows(min_row=2, values_only=True):  # min_row=2 skips the header
+        respuesta_list.append(row[2])  # Column 3: Respuesta1
+
+    # Select 3 random answers from each list
+    respuesta1 = random.sample(respuesta_list, min(4, len(respuesta_list)))
+
+
+    # Return the selected answers in the required format
+    return {
+        "respuestas": respuesta1,
     }
 
 def create_ia_mosaic(mosaic_width=1000, mosaic_height=1000, image_size=(100, 100), output_file="mosaic.png"):

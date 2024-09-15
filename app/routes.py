@@ -1,12 +1,13 @@
 # Endpoint 1: Generar imagen con DALL-E
 from fastapi import APIRouter, Body
 from pydantic import BaseModel
-import sys
-from crud import get_image_filenames, save_text, get_word_cloud_image, insert_text_to_excel, insert_text_to_excel_momento, get_momento, create_ia_mosaic
+import time
+from crud import get_image_filenames, save_text, get_word_cloud_image, insert_text_to_excel, insert_text_to_excel_momento, get_momento, create_ia_mosaic, insert_momento4_to_excel, insert_training_to_excel, insert_ia_to_excel, get_momento2
 from app.wordcloudMod import generate_wordcloud
-from ia import generate_ia_image
+from ia import generate_ia_image, random_selector
 import logging
-from config import IMAGE_WORDCLOUD_DIR, STATE_DIR, SERVE_IMAGE
+import random
+from config import IMAGE_WORDCLOUD_DIR, STATE_DIR, SERVE_IMAGE, IMAGE_IA_DIR
 
 router = APIRouter()
 
@@ -17,23 +18,61 @@ logger = logging.getLogger(__name__)
 class textModel(BaseModel):
     text: str
 
+class imageGeneratorModel(BaseModel):
+    name: str
+    text: str
+
 class momentoModel(BaseModel):
     pregunta1: str
     pregunta2: str
     pregunta3: str
 
+class momento4Model(BaseModel):
+    content: int
+    duration: int
+    food: int
+    location: int
+    presentation1: int
+    question1: str
+    question2: str
+    speaker1: int
+    speaker2: int
+    summit: int
+
+
+
+class trainingModel(BaseModel):
+    AwardsEvent: int
+    TrainingWednesday: int
+    TrainingThursday: int
+    question1: str
+    question2: str
+    
+
+
 #generate IA image
 @router.post("/generate")
-def generate_image(request: textModel = Body(...)):
-    logger.info(f"New request for image generation: {request.text}")
+def generate_image(request: imageGeneratorModel = Body(...)):
+    logger.info(f"New request for image generation: {request.text} from {request.name}")
     text_file = open(STATE_DIR, "r")
     texts = text_file.readlines()
     text_list = [text.strip() for text in texts]
     text_file.close()
     state =  text_list[0]
     if state == "IA":
-        image_url = generate_ia_image(request.text)
-        return image_url
+        try:
+            image_url = generate_ia_image(request.text)
+            image_name = image_url['image_url'].split("/")[-1]
+            insert_ia_to_excel("ia.xlsx", request.text, request.name, image_name)
+            return image_url
+        except Exception as e:
+            logger.error("Error generating IA image, defaulting")
+            image_selected = random_selector()
+            insert_ia_to_excel("ia.xlsx", request.text, request.name, image_selected)
+            response = {"image_url": f"{SERVE_IMAGE}/files/ia/{image_selected}"}
+            #wait randomly between 5 and 15 seconds before returning response
+            time.sleep(random.randint(5, 15))
+            return response
     else:
         return {"status": "Conflic generating image", "code": 409, "msg": "The state is not IA"}
 
@@ -124,41 +163,65 @@ async def save_state(request: textModel = Body(...)):
         return {"status": f"Error saving state: {str(e)}", "code": 500}
     
 @router.post("/moment1")
-async def momentOne(request: momentoModel = Body(...)):
+async def moment1(request: momentoModel = Body(...)):
     try:
-        insert_text_to_excel_momento("momento1.xlsx", request)
+        logger.info(f"New request for form momento 1 insertion: {request}")
+        insert_text_to_excel_momento("latamTopInitiatives.xlsx", request)
         return {"status": "Text saved successfully", "code": 200}
     except Exception as e:
         return {"status": f"Error saving moment1: {str(e)}", "code": 500}
 
 @router.get("/moment1")
-async def momentOne():
+async def moment1get():
     try:
+        logger.info(f"New request for getting momento 1 answers")
         respuestas = get_momento()
         return {"status": "Text saved successfully", "code": 200, "respuestas": respuestas}
     except Exception as e:
         return {"status": f"Error saving moment1: {str(e)}", "code": 500}
 
 @router.post("/moment2")
-async def momentOne(request: textModel = Body(...)):
+async def moment2(request: textModel = Body(...)):
     try:
-        insert_text_to_excel("momento2.xlsx", request.text)
+        logger.info(f"New request for form momento 2 insertion: {request}")
+        insert_text_to_excel("biggestTakeaway.xlsx", request.text)
         return {"status": "Text saved successfully", "code": 200}
     except Exception as e:
         return {"status": f"Error getting moment1: {str(e)}", "code": 500}
 
-@router.post("/moment3")
-async def momentOne(request: textModel = Body(...)):
+@router.get("/moment2")
+async def moment2get():
     try:
-        insert_text_to_excel("momento3.xlsx", request.text)
+        logger.info(f"New request for getting momento 1 answers")
+        respuestas = get_momento2()
+        return {"status": "Text saved successfully", "code": 200, "respuestas": respuestas}
+    except Exception as e:
+        return {"status": f"Error saving moment1: {str(e)}", "code": 500}
+
+@router.post("/moment3")
+async def moment3(request: textModel = Body(...)):
+    try:
+        logger.info(f"New request for form momento 3 insertion: {request}")
+        insert_text_to_excel("highlights.xlsx", request.text)
         return {"status": "Text saved successfully", "code": 200}
     except Exception as e:
         return {"status": f"Error saving moment1: {str(e)}", "code": 500}
 
 @router.post("/moment4")
-async def momentOne(request: textModel = Body(...)):
+async def moment4(request: momento4Model = Body(...)):
     try:
-        insert_text_to_excel("momento4.xlsx", request.text)
+        logger.info(f"New request for form momento4 insertion: {request}")
+        insert_momento4_to_excel("summitFeedback.xlsx", request)
         return {"status": "Text saved successfully", "code": 200}
     except Exception as e:
         return {"status": f"Error saving moment1: {str(e)}", "code": 500}
+    
+@router.post("/training")
+async def training(request: trainingModel = Body(...)):
+    try:
+        logger.info(f"New request for training response insertion: {request}")
+        insert_training_to_excel("training.xlsx", request)
+        return {"status": "Text saved successfully", "code": 200}
+    except Exception as e:
+        return {"status": f"Error saving moment1: {str(e)}", "code": 500}
+    
