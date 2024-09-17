@@ -30,7 +30,6 @@ SECONDS_BETWEEN_REQUESTS = 60 / REQUESTS_PER_MINUTE
 request_queue = deque()  # Queue to manage multiple requests
 
 # Function to generate IA image with rate limiting
-#TODO test this fucking buffer
 def generate_ia_image(text: str):
     # Add the request to the queue
     request_queue.append(text)
@@ -65,8 +64,46 @@ Prohibido Usar: bebidas alcohólicas o imágenes que sean ofensivas.
             image_serve_url = save_dir.replace("/app", SERVE_IMAGE)
             logger.info(f"Image saved at {image_serve_url}")
 
-            # Respect rate limit by waiting before processing the next request
-            time.sleep(SECONDS_BETWEEN_REQUESTS)
+            # Return the generated image URL
+            return {"image_url": image_serve_url}
+
+        except Exception as e:
+            logger.error(f"Error generating IA image: {str(e)}")
+            return False
+
+def generate_ia_image_lowQ(text: str):
+    # Add the request to the queue
+    request_queue.append(text)
+
+    # Process the queue while respecting the rate limit
+    while request_queue:
+        try:
+            # Retrieve the next text from the queue
+            text = request_queue.popleft()
+
+            # OpenAI API request
+            response = client.images.generate(
+                model="dall-e-2",
+                prompt = f"""
+Crea una imagen corporativa para McCain que represente visualmente el compromiso expresado en '{text}' a la pregunta "what is your commitment for 2030, usando amarillo, naranja, negro y blanco como colores principales
+Personalización: Cada imagen debe ser única y reflejar la esencia del compromiso individual, conectando visualmente con los pilares.
+Estilo: estilo profesional con un enfoque en la claridad y el impacto visual.
+Prohibido Usar: bebidas alcohólicas o imágenes que sean ofensivas.
+""",
+                size="1024x1024",
+                quality="standard",
+                n=1,
+            )
+
+            # Process response
+            image_url = response.data[0].url
+            image_name = image_url.split("/")[6].split("?")[0]
+            logger.info(f"Image name: {image_name}")
+
+            # Save the image and generate the serving URL
+            save_dir = save_image_locally(image_url, image_name)
+            image_serve_url = save_dir.replace("/app", SERVE_IMAGE)
+            logger.info(f"Image saved at {image_serve_url}")
 
             # Return the generated image URL
             return {"image_url": image_serve_url}
@@ -74,6 +111,7 @@ Prohibido Usar: bebidas alcohólicas o imágenes que sean ofensivas.
         except Exception as e:
             logger.error(f"Error generating IA image: {str(e)}")
             return False
+
 
 
 def random_selector():

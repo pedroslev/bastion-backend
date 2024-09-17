@@ -4,7 +4,7 @@ from pydantic import BaseModel
 import time
 from crud import get_image_filenames, save_text, get_word_cloud_image, insert_text_to_excel, insert_text_to_excel_momento, get_momento, create_ia_mosaic, insert_momento4_to_excel, insert_training_to_excel, insert_ia_to_excel, get_momento2
 from app.wordcloudMod import generate_wordcloud
-from ia import generate_ia_image, random_selector
+from ia import generate_ia_image, random_selector, generate_ia_image_lowQ
 import logging
 import random
 from config import IMAGE_WORDCLOUD_DIR, STATE_DIR, SERVE_IMAGE, IMAGE_IA_DIR
@@ -66,13 +66,19 @@ def generate_image(request: imageGeneratorModel = Body(...)):
             insert_ia_to_excel("ia.xlsx", request.text, request.name, image_name)
             return image_url
         except Exception as e:
-            logger.error("Error generating IA image, defaulting")
-            image_selected = random_selector()
-            insert_ia_to_excel("ia.xlsx", request.text, request.name, image_selected)
-            response = {"image_url": f"{SERVE_IMAGE}/files/ia/{image_selected}"}
-            #wait randomly between 5 and 15 seconds before returning response
-            time.sleep(random.randint(5, 15))
-            return response
+            try:
+                image_url = generate_ia_image_lowQ(request.text)
+                image_name = image_url['image_url'].split("/")[-1]
+                insert_ia_to_excel("ia.xlsx", request.text, request.name, image_name)
+                return image_url
+            except Exception as e:        
+                logger.error("Error generating IA image, defaulting")
+                image_selected = random_selector()
+                insert_ia_to_excel("ia.xlsx", request.text, request.name, image_selected)
+                response = {"image_url": f"{SERVE_IMAGE}/files/ia/{image_selected}"}
+                #wait randomly between 5 and 15 seconds before returning response
+                time.sleep(random.randint(5, 15))
+                return response
     else:
         return {"status": "Conflic generating image", "code": 409, "msg": "The state is not IA"}
 
